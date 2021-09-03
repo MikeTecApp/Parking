@@ -8,23 +8,23 @@ import java.util.Date;
 
 public class Ticket {
     private  int id;
-    private Date entrance;
-    private Account pass;
+    private Date enterDate;
+    private Account account;
     private ParkingLot parkingLot;
     private Car vehicle;
     SimpleDateFormat dateFormat =new SimpleDateFormat("yyyy/MM/dd,    hh:mm a");
 
     public Ticket(int id) {
         this.id = id;
-        this.entrance= new Date();
+        this.enterDate = new Date();
     }
 
-    public Account getPass() {
-        return pass;
+    public Account getAccount() {
+        return account;
     }
 
-    public void setPass(Account pass) {
-        this.pass = pass;
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public ParkingLot getParkingLot() {
@@ -52,8 +52,8 @@ public class Ticket {
         return  "---------------------------------------------------" +
                 "\n\n Enter Ticket{" +
                 "No:" + id +
-                ",\n Date & Time = " + dateFormat.format(entrance) +
-                ",\n  " + pass +
+                ",\n Date & Time = " + dateFormat.format(enterDate) +
+                ",\n  " + account +
                 ",\n\n Park at" + parkingLot +
                 ",\n " + vehicle +
                 '}';

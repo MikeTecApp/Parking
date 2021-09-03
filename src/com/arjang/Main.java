@@ -4,17 +4,160 @@ import com.arjang.accounts.*;
 import com.arjang.parking.*;
 import com.arjang.vehicles.Car;
 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+    public static final String DB_NAME = "parking.db";
+    public static final String CONECTION_STRING = "jdbc:sqlite:D:\\Programs\\Projects\\Java\\Parking\\src\\"+DB_NAME;
+
     public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(CONECTION_STRING);
+            Statement statement = conn.createStatement();)
+        {
+            statement.execute("SELECT ticket.ticketId, parkingFloor.levelName, salon.salonName, parkingLot.parkingLotNumber , car.type, " +
+                    "car.plateNumber,ticket.enterDate, account.accountType " +
+                    "FROM parkingLot " +
+                    "INNER JOIN car " +
+                    "ON parkingLot.parkingLotId = car.parkinglotId " +
+                    "INNER JOIN salon " +
+                    "ON parkingLot.salonId = salon.salonId " +
+                    "INNER JOIN parkingFloor  " +
+                    "ON salon.parkingFloorId = parkingFloor.parkingFloorId " +
+                    "INNER JOIN ticket " +
+                    "ON ticket.carId = car.carId " +
+                    "INNER join account " +
+                    "ON account.accountId = ticket.accountID " +
+                    "order by ticketId");
+           ResultSet resultSet = statement.getResultSet();
+           while (resultSet.next()){
+               System.out.println("Ticket Id = " + resultSet.getInt("ticketId"));
+               System.out.print("levelName: " + resultSet.getString("levelName")+",\t");
+               System.out.print("salonName: " + resultSet.getString("salonName")+",\t");
+               System.out.print("parking:" + resultSet.getString("parkingLotNumber")+",\t");
+               System.out.print("Model: " + resultSet.getString("type")+",\t");
+               System.out.print("pelak: " + resultSet.getString("plateNumber")+",\t");
+               System.out.print("tarikh: " + resultSet.getString("enterDate")+",\t");
+               System.out.print("account: " + resultSet.getString("accountType")+"\n\n");
+
+           }
+  /*           while (resultSet.next()){
+                System.out.println("Car ID: "+resultSet.getInt("carId"));
+                System.out.print(" parked at parkinglot ID: " + resultSet.getInt("parkingLotId"));
+                System.out.print("- Car's plate number is: " + resultSet.getString("plateNumber"));
+                System.out.print(" and Model : " + resultSet.getString("type") + "\n ");
+                }*/
+
+
+
+        } catch (SQLException e) {
+            System.out.println(" ----------- DB connection Error !!! -----------");
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private static Ticket findTiketForParking(Parking funParking, String parkingName, List<Ticket> ticketList) {
+        ParkingLot lot =  findParkingLot (funParking,parkingName);
+        for (Ticket ticket:ticketList  ) {
+            if (lot != null && ticket.getParkingLot().getParkingLotId() == lot.getParkingLotId()) {
+                System.out.println(ticket);
+                return ticket;
+
+            }
+        }
+        System.out.println("Sorry Can Not find the ticket");
+        return null;
+    }
+
+//  Find all using parking
+    private static ParkingLot findParkingLot (Parking funParking,String parkingName){
+        List<ParkingFloor> floors = funParking.getParkingFloorList();
+        for (ParkingFloor floor:floors){
+            List<Salon> salons = floor.getSalonsList();
+            for(Salon salon : salons){
+                List<ParkingLot> parkings = salon.getParkingLotList();
+                for (ParkingLot parking: parkings){
+                    if (parking.getName().equals(parkingName)) {
+                        System.out.println(parking);
+                        return  parking;
+                    }
+                }
+            }
+        }
+        System.out.println("Parking lot not found !!! :(");
+        return null;
+    }
+    private static void parkingInfo(Parking funParking, String parkingName) {
+                    ParkingLot lot =  findParkingLot (funParking,parkingName);
+                    if (lot != null && lot.getName().equals(parkingName)) {
+                        System.out.println(" Information: parking " + lot.getName() + " Number: " + lot.getParkingLotId());
+                    }
+        }
+
+//  Find all using parking
+    private static void allUseingParkings(Parking funParking) {
+        List<ParkingFloor> floors = funParking.getParkingFloorList();
+        for (ParkingFloor floor:floors){
+            List<Salon> salons = floor.getSalonsList();
+            for(Salon salon : salons){
+                List<ParkingLot> parkings = salon.getParkingLotList();
+                for (ParkingLot parking: parkings){
+                    if (parking.isTaken)
+                        System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
+                                + " in Salon " + salon.getName() + " in " + floor.getLevelName() + " is busy");
+                }
+            }
+        }
+
+    }
+
+//  Get available parking list
+    private static void availabelParkins (Parking funParking) {
+
+        List<ParkingFloor> floors = funParking.getParkingFloorList();
+        for (ParkingFloor floor:floors){
+            List<Salon> salons = floor.getSalonsList();
+            for(Salon salon : salons){
+                List<ParkingLot> parkings = salon.getParkingLotList();
+                for (ParkingLot parking: parkings){
+                    if (!parking.isTaken)
+                    System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
+                            + " in Salon " + salon.getName() + " in " + floor.getLevelName() + "is empty");
+                }
+            }
+        }
+
+    }
+//  Get all parking list
+    private static void allParkigList(Parking funParking) {
+
+        List<ParkingFloor> floors = funParking.getParkingFloorList();
+        for (ParkingFloor floor:floors)
+        {
+            List<Salon> salons = floor.getSalonsList();
+            for(Salon salon : salons){
+                List<ParkingLot> parkings = salon.getParkingLotList();
+                for (ParkingLot parking: parkings){
+                    System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
+                            + " in Salon " + salon.getName() + " in " + floor.getLevelName() );
+                }
+            }
+        }
+
+    }
+
+    private void loadData (){
+
+/*        ------------------------Start---------
 //      Main Class Variables
         String  parkingName;
         List<Ticket>ticketList = new ArrayList<>();
 
-//      Create Scaner object for data entry
+//      Create Scanner object for data entry
         Scanner scanner = new Scanner(System.in);
         System.out.println(" Welcome to the parking mode......");
 
@@ -83,7 +226,7 @@ public class Main {
 //      Create 1st Ticket
         Ticket firstTicket = new Ticket(1);
         firstTicket.setParkingLot(lot1);
-        firstTicket.setPass(dailyAcc);
+        firstTicket.setAccount(dailyAcc);
         firstTicket.setVehicle(pride);
         ticketList.add(firstTicket);
 //        System.out.println(firstTicket);
@@ -91,7 +234,7 @@ public class Main {
 //       Create 2nd Ticket
         Ticket secondTicket = new Ticket(2);
         secondTicket.setParkingLot(lot2);
-        secondTicket.setPass(threeMonthsAcc);
+        secondTicket.setAccount(threeMonthsAcc);
         secondTicket.setVehicle(volvo);
         ticketList.add(secondTicket);
 //        System.out.println(secondTicket);
@@ -118,98 +261,7 @@ public class Main {
 //       String input = scanner.nextLine();
 //       System.out.println(input);
 
-
-
-    }
-
-    private static Ticket findTiketForParking(Parking funParking, String parkingName, List<Ticket> ticketList) {
-        ParkingLot lot =  findParkingLot (funParking,parkingName);
-        for (Ticket ticket:ticketList  ) {
-            if (lot != null && ticket.getParkingLot().getParkingLotId() == lot.getParkingLotId()) {
-                System.out.println(ticket);
-                return ticket;
-
-            }
-        }
-        System.out.println("Sorry Can Not find the ticket");
-        return null;
-    }
-
-//  Find all using parking
-    private static ParkingLot findParkingLot (Parking funParking,String parkingName){
-        List<ParkingFloor> floors = funParking.getParkingFloorList();
-        for (ParkingFloor floor:floors){
-            List<Salon> salons = floor.getSalonsList();
-            for(Salon salon : salons){
-                List<ParkingLot> parkings = salon.getParkingLotList();
-                for (ParkingLot parking: parkings){
-                    if (parking.getName().equals(parkingName)) {
-                        System.out.println(parking);
-                        return  parking;
-                    }
-                }
-            }
-        }
-        System.out.println("Parking lot not found !!! :(");
-        return null;
-    }
-    private static void parkingInfo(Parking funParking, String parkingName) {
-                    ParkingLot lot =  findParkingLot (funParking,parkingName);
-                    if (lot != null && lot.getName().equals(parkingName)) {
-                        System.out.println(" Information: parking " + lot.getName() + " Number: " + lot.getParkingLotId());
-                    }
-        }
-
-//        Find all using parking
-    private static void allUseingParkings(Parking funParking) {
-        List<ParkingFloor> floors = funParking.getParkingFloorList();
-        for (ParkingFloor floor:floors){
-            List<Salon> salons = floor.getSalonsList();
-            for(Salon salon : salons){
-                List<ParkingLot> parkings = salon.getParkingLotList();
-                for (ParkingLot parking: parkings){
-                    if (parking.isTaken)
-                        System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
-                                + " in Salon " + salon.getName() + " in " + floor.getLevelName() + " is busy");
-                }
-            }
-        }
-
-    }
-
-//     Get available parking list
-    private static void availabelParkins (Parking funParking) {
-
-        List<ParkingFloor> floors = funParking.getParkingFloorList();
-        for (ParkingFloor floor:floors){
-            List<Salon> salons = floor.getSalonsList();
-            for(Salon salon : salons){
-                List<ParkingLot> parkings = salon.getParkingLotList();
-                for (ParkingLot parking: parkings){
-                    if (!parking.isTaken)
-                    System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
-                            + " in Salon " + salon.getName() + " in " + floor.getLevelName() + "is empty");
-                }
-            }
-        }
-
-    }
-//  Get all parking list
-    private static void allParkigList(Parking funParking) {
-
-        List<ParkingFloor> floors = funParking.getParkingFloorList();
-        for (ParkingFloor floor:floors)
-        {
-            List<Salon> salons = floor.getSalonsList();
-            for(Salon salon : salons){
-                List<ParkingLot> parkings = salon.getParkingLotList();
-                for (ParkingLot parking: parkings){
-                    System.out.println("parking " + parking.getName() + " Number: " + parking.getParkingLotId()
-                            + " in Salon " + salon.getName() + " in " + floor.getLevelName() );
-                }
-            }
-        }
-
+        -----------------------END------------------------*/
     }
 
 }
